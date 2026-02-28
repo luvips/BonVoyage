@@ -5,7 +5,7 @@ export default function Page() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="flex w-full max-w-4xl mx-auto shadow-lg rounded-2xl overflow-hidden bg-white">
        
-        <div className="hidden md:flex w-1/2 items-center justify-center bg-gray-200 p-6">
+        <div className="hidden md:flex w-3/5 items-center justify-center bg-gray-200 p-6">
           <div className="w-full h-full min-h-[500px] rounded-2xl bg-gray-300 flex items-center justify-center text-gray-400 text-sm">
             <img
   src="/register_3.png"
@@ -17,7 +17,7 @@ export default function Page() {
         </div>
 
        
-        <div className="w-full md:w-1/2 flex items-center justify-center p-8">
+        <div className="w-full md:w-2/5 flex items-center justify-center p-8">
           <SignUp />
         </div>
       </div>
