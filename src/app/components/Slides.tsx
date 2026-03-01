@@ -1,6 +1,6 @@
 import { Data } from "../page";
 import React from "react";
-import sliderCard from "./SliderCard";
+import SliderCard from "./SliderCard";
 
 type Props = {
     data: Data[];
