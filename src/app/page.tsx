@@ -1,11 +1,11 @@
 import { Righteous } from "next/font/google";
 import { AnimatePresence } from "motion/react";
 import React from "react";
-import  Header  from "@/components/Header";
-import BackgroundImage from "@/components/BackgroundImage";
-import Slides from "@/components/Slides";
-import SlideInfo from "@/components/SlideInfo";
-import Controls from "@/components/Controls";
+import  Header  from "@/app/components/Header";
+import BackgroundImage from "@/app/components/BackgroundImage";
+import Slides from "@/app/components/Slides";
+import SlideInfo from "@/app/components/SlideInfo";
+import Controls from "@/app/components/Controls";
 
 
 
@@ -39,7 +39,9 @@ export default function Home() {
         transitionData={transitionData} 
         currentSlideData={currentSlideData}/>
         <div className="absolute z-20 h-full w-full">
+          {/*todo esto esel header section*/}
           <Header />
+          {/*aqui llamo a el componente de header*/}
           <div className=" flex h-full w-full grid-cols-10 flex-col md:grid">
             <div className=" col-span-4 mb-3 flex h-full flex-1 flex-col justify-end px-5 md:mb-0 md:justify-center md:px-10">
               <SlideInfo 
@@ -52,9 +54,11 @@ export default function Home() {
               <Slides data={data}/>
               <Controls
               currentSlideData={currentSlideData}
-              setCurrentSlideData={setCurrentSlideData}
-              setData={setData}
-              setTransitionData={setTransitionData}
+              data={data}
+              transitionData={transitionData}
+              initData={initData}
+              handleData={setData}
+              handleTransitionData={setTransitionData} 
               />    
               </div>
               
