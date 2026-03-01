@@ -1,3 +1,4 @@
+"use client";
 import { Righteous } from "next/font/google";
 import { AnimatePresence } from "motion/react";
 import React from "react";
@@ -43,6 +44,7 @@ export default function Home() {
           <Header />
           {/*aqui llamo a el componente de header*/}
           <div className=" flex h-full w-full grid-cols-10 flex-col md:grid">
+            {/*slider seccion derecha contendedor*/}
             <div className=" col-span-4 mb-3 flex h-full flex-1 flex-col justify-end px-5 md:mb-0 md:justify-center md:px-10">
               <SlideInfo 
               transitionData={transitionData} 
@@ -59,6 +61,8 @@ export default function Home() {
               initData={initData}
               handleData={setData}
               handleTransitionData={setTransitionData} 
+              handleCurrentSlideData={setCurrentSlideData}
+              sliderData={sliderData} 
               />    
               </div>
               
