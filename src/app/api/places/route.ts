@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
   const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
   const unsplashKey = process.env.UNSPLASH_ACCESS_KEY;
 
-  // 1. Obtener nombre de ciudad/país con Mapbox
+
   let cityName = "Destino desconocido";
   let countryName = "";
   let searchQuery = "";
@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
   const feature = geoData.features?.[0];
 
   if (feature) {
-    // Mapbox devuelve el contexto con país, región, ciudad
+
     const context = feature.context ?? [];
     const city = feature.place_type.includes("place") 
       ? feature.text 
@@ -39,7 +39,6 @@ export async function GET(request: NextRequest) {
 
   let photoUrl: string | null = null;
 
-  // 2. Wikipedia como fuente primaria (sin API key, cubre casi cualquier ciudad)
   if (cityName !== "Destino desconocido") {
     const wikiRes = await fetch(
       `https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(cityName)}&prop=pageimages&piprop=thumbnail&pithumbsize=900&format=json&gsrlimit=1`,
@@ -53,7 +52,7 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // 3. Unsplash como fallback si Wikipedia no tiene imagen
+  // segiimos usando unsplash por si fala wikipedia
   if (!photoUrl && unsplashKey && searchQuery) {
     const unsplashRes = await fetch(
       `https://api.unsplash.com/search/photos?query=${encodeURIComponent(searchQuery)}&per_page=1&orientation=landscape`,
