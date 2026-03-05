@@ -6,6 +6,8 @@ import "mapbox-gl/dist/mapbox-gl.css";
 
 type SelectedPlace = {
   name: string;
+  country: string;
+  fullName: string;
   lng: number;
   lat: number;
   photoUrl: string | null;
@@ -29,7 +31,7 @@ export default function MapView({ onPlaceSelect, flyTo }: Props) {
       const { lng, lat } = e.lngLat;
       const res = await fetch(`/api/places?lat=${lat}&lng=${lng}`);
       const data = await res.json();
-      onPlaceSelect({ name: data.name, lng, lat, photoUrl: data.photoUrl });
+      onPlaceSelect({ name: data.name, country: data.country ?? "", fullName: data.fullName ?? data.name, lng, lat, photoUrl: data.photoUrl });
     },
     [onPlaceSelect]
   );

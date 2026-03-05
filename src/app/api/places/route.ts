@@ -9,50 +9,66 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Missing coordinates" }, { status: 400 });
   }
 
-  const googleKey = process.env.GOOGLE_PLACES_API_KEY;
   const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+  const unsplashKey = process.env.UNSPLASH_ACCESS_KEY;
 
-  let name = `${parseFloat(lat).toFixed(4)}°, ${parseFloat(lng).toFixed(4)}°`;
+  // 1. Obtener nombre de ciudad/país con Mapbox
+  let cityName = "Destino desconocido";
+  let countryName = "";
+  let searchQuery = "";
+
+  const geoRes = await fetch(
+    `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${mapboxToken}&language=es&types=place,region,country`
+  );
+  const geoData = await geoRes.json();
+  const feature = geoData.features?.[0];
+
+  if (feature) {
+    // Mapbox devuelve el contexto con país, región, ciudad
+    const context = feature.context ?? [];
+    const city = feature.place_type.includes("place") 
+      ? feature.text 
+      : context.find((c: any) => c.id.startsWith("place"))?.text;
+    const country = context.find((c: any) => c.id.startsWith("country"))?.text 
+      ?? (feature.place_type.includes("country") ? feature.text : "");
+
+    cityName = city ?? feature.text;
+    countryName = country;
+    searchQuery = [city, country].filter(Boolean).join(" ");
+  }
+
   let photoUrl: string | null = null;
 
-  if (googleKey) {
-    const nearbyRes = await fetch("https://places.googleapis.com/v1/places:searchNearby", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Goog-Api-Key": googleKey,
-        "X-Goog-FieldMask": "places.displayName,places.photos",
-      },
-      body: JSON.stringify({
-        locationRestriction: {
-          circle: {
-            center: { latitude: parseFloat(lat), longitude: parseFloat(lng) },
-            radius: 2000,
-          },
-        },
-        maxResultCount: 1,
-      }),
-    });
-
-    const nearbyData = await nearbyRes.json();
-    const place = nearbyData.places?.[0];
-
-    if (place) {
-      if (place.displayName?.text) name = place.displayName.text;
-      const photoName = place.photos?.[0]?.name;
-      if (photoName) {
-        photoUrl = `https://places.googleapis.com/v1/${photoName}/media?maxHeightPx=600&key=${googleKey}`;
-      }
+  // 2. Wikipedia como fuente primaria (sin API key, cubre casi cualquier ciudad)
+  if (cityName !== "Destino desconocido") {
+    const wikiRes = await fetch(
+      `https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(cityName)}&prop=pageimages&piprop=thumbnail&pithumbsize=900&format=json&gsrlimit=1`,
+      { headers: { "User-Agent": "BonVoyageApp/1.0" } }
+    );
+    const wikiData = await wikiRes.json();
+    const pages = wikiData.query?.pages;
+    if (pages) {
+      const firstPage = Object.values(pages)[0] as any;
+      photoUrl = firstPage?.thumbnail?.source ?? null;
     }
   }
 
-  if (name.includes("°") && mapboxToken) {
-    const geoRes = await fetch(
-      `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${mapboxToken}&language=es`
+  // 3. Unsplash como fallback si Wikipedia no tiene imagen
+  if (!photoUrl && unsplashKey && searchQuery) {
+    const unsplashRes = await fetch(
+      `https://api.unsplash.com/search/photos?query=${encodeURIComponent(searchQuery)}&per_page=1&orientation=landscape`,
+      { headers: { Authorization: `Client-ID ${unsplashKey}` } }
     );
-    const geoData = await geoRes.json();
-    if (geoData.features?.[0]?.place_name) name = geoData.features[0].place_name;
+    const unsplashData = await unsplashRes.json();
+    photoUrl = unsplashData.results?.[0]?.urls?.regular ?? null;
   }
 
-  return NextResponse.json({ name, photoUrl });
+  return NextResponse.json({
+    name: cityName,
+    country: countryName,
+    fullName: [cityName, countryName].filter(Boolean).join(", "),
+    lat: parseFloat(lat),
+    lng: parseFloat(lng),
+    photoUrl,
+  });
 }

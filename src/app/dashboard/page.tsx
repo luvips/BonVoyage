@@ -9,6 +9,8 @@ const MapView = dynamic(() => import("./components/MapView"), { ssr: false });
 
 type SelectedPlace = {
   name: string;
+  country: string;
+  fullName: string;
   lng: number;
   lat: number;
   photoUrl: string | null;
@@ -22,7 +24,7 @@ export default function DashboardPage() {
     setFlyTo({ lng: result.lng, lat: result.lat });
     const res = await fetch(`/api/places?lat=${result.lat}&lng=${result.lng}`);
     const data = await res.json();
-    setSelectedPlace({ name: data.name ?? result.name, lng: result.lng, lat: result.lat, photoUrl: data.photoUrl });
+    setSelectedPlace({ name: data.name ?? result.name, country: data.country ?? "", fullName: data.fullName ?? data.name ?? result.name, lng: result.lng, lat: result.lat, photoUrl: data.photoUrl });
   }, []);
 
   return (

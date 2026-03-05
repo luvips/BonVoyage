@@ -7,6 +7,8 @@ type SelectedPlace = {
   lng: number;
   lat: number;
   photoUrl: string | null;
+    country: string;        
+  fullName: string; 
 };
 
 type Props = {
@@ -40,7 +42,10 @@ export default function DestinationCard({ place, onSave, onCancel }: Props) {
           </button>
         </div>
 
-        <p className="text-gray-800 font-medium text-sm mb-1 leading-snug">{place.name}</p>
+       <p className="text-gray-800 font-bold text-base">{place.name}</p>
+{place.country && (
+  <p className="text-gray-400 text-xs">{place.country}</p>
+)}
         <p className="text-gray-400 text-xs mb-4">
           {place.lat.toFixed(4)}°, {place.lng.toFixed(4)}°
         </p>
