@@ -38,21 +38,29 @@ function TripPageContent() {
       <TripNav active={activeSection} onChange={setActiveSection} />
 
       {/* Destination hero */}
-      <div className="relative h-48 w-full overflow-hidden bg-gray-800">
-        {destination.photoUrl ? (
-          <img
-            src={destination.photoUrl}
-            alt={destination.name}
-            className="w-full h-full object-cover opacity-70"
-          />
-        ) : (
-          <div className="w-full h-full bg-gradient-to-r from-blue-600 to-blue-400" />
-        )}
-        <div className="absolute inset-0 flex flex-col justify-end p-6">
-          <h1 className="text-white text-3xl font-bold drop-shadow">{destination.name}</h1>
-          {destination.country && (
-            <p className="text-white/80 text-sm mt-1 drop-shadow">{destination.country}</p>
+      <div className="max-w-6xl mx-auto w-full px-4 pt-6">
+        <div className="relative h-100 w-full overflow-hidden rounded-2xl bg-gray-800 shadow-md">
+          {destination.photoUrl ? (
+            <img
+              src={destination.photoUrl}
+              alt={destination.name}
+              className="w-full h-full object-cover opacity-75"
+            />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-r from-blue-600 to-blue-400" />
           )}
+          {/* Gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+          <div className="absolute inset-0 flex flex-col justify-end p-7">
+            <h1 className="text-white text-5xl font-bold drop-shadow-lg leading-tight">
+              {destination.name}
+            </h1>
+            {destination.country && (
+              <p className="text-white/80 text-2xl font-medium mt-1 drop-shadow">
+                {destination.country}
+              </p>
+            )}
+          </div>
         </div>
       </div>
 
