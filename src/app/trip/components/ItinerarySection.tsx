@@ -25,7 +25,7 @@ export default function ItinerarySection({ itinerary, onRemove }: Props) {
   return (
     <div className="px-4 max-w-6xl mx-auto pt-6 pb-10 space-y-8">
 
-      {/* Summary header */}
+      
       <div className="flex items-center gap-2 text-gray-500 text-sm">
         <IoCalendar className="text-blue-400" />
         <span>
@@ -34,7 +34,7 @@ export default function ItinerarySection({ itinerary, onRemove }: Props) {
         </span>
       </div>
 
-      {/* Days */}
+      
       {itinerary.days.map((day) => (
         <div key={day.dayNumber}>
           {/* Day header */}
@@ -49,7 +49,6 @@ export default function ItinerarySection({ itinerary, onRemove }: Props) {
             </span>
           </div>
 
-          {/* Items grid */}
           <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 pl-11">
             {day.items.map((item) => (
               <ItineraryCard
@@ -108,12 +107,12 @@ function ItineraryCard({
           {item.type === "poi" ? "Lugar" : "Restaurante"}
         </span>
 
-        {/* Name */}
+       
         <h3 className="font-semibold text-gray-800 text-xs leading-tight line-clamp-2 mt-1">
           {item.name}
         </h3>
 
-        {/* Rating */}
+        
         {item.rating && (
           <div className="flex items-center gap-1 mt-1">
             <IoStar className="text-amber-400 text-[10px]" />
@@ -124,7 +123,7 @@ function ItineraryCard({
           </div>
         )}
 
-        {/* Address */}
+       
         <div className="flex items-start gap-1 mt-1.5">
           <IoLocationSharp className="text-gray-400 text-[9px] flex-shrink-0 mt-0.5" />
           <p className="text-[9px] text-gray-400 line-clamp-1">{item.address}</p>

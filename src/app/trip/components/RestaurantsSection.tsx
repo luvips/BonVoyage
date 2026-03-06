@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useMemo } from "react";
 import dynamic from "next/dynamic";
-import { IoStar, IoLocationSharp, IoRestaurant, IoPricetag, IoSearch } from "react-icons/io5";
+import { IoStar, IoLocationSharp, IoRestaurant, IoPricetag, IoSearch, IoAdd, IoCheckmark } from "react-icons/io5";
+import type { ItineraryItem } from "../types";
 
 const POIMap = dynamic(() => import("./POIMap"), { ssr: false });
 
@@ -27,11 +28,18 @@ type Destination = {
   photoUrl: string | null;
 };
 
-export default function RestaurantsSection({ destination }: { destination: Destination }) {
+type Props = {
+  destination: Destination;
+  onAddToItinerary: (item: ItineraryItem, dayNumber: number) => void;
+};
+
+export default function RestaurantsSection({ destination, onAddToItinerary }: Props) {
   const [places, setPlaces] = useState<Place[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
+  const [pickerOpenId, setPickerOpenId] = useState<string | null>(null);
+  const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     async function fetchRestaurants() {
@@ -60,6 +68,25 @@ export default function RestaurantsSection({ destination }: { destination: Desti
         p.address.toLowerCase().includes(q)
     );
   }, [places, query]);
+
+  function handleAddToDay(place: Place, day: number) {
+    onAddToItinerary(
+      {
+        id: place.id,
+        type: "restaurant",
+        name: place.name,
+        address: place.address,
+        lat: place.lat,
+        lng: place.lng,
+        photoUrl: place.photoUrl,
+        rating: place.rating,
+        priceLevel: place.priceLevel,
+      },
+      day
+    );
+    setAddedIds((prev) => new Set(prev).add(place.id));
+    setPickerOpenId(null);
+  }
 
   if (loading) {
     return (
@@ -94,10 +121,8 @@ export default function RestaurantsSection({ destination }: { destination: Desti
         />
       </div>
 
-      {/* Main layout: cards grid + map */}
       <div className="flex gap-4 items-start">
 
-        {/* Left — cards grid */}
         <div className="flex-1 overflow-y-auto max-h-[580px] pr-1">
           {filtered.length === 0 ? (
             <p className="text-sm text-gray-400 py-10 text-center">Sin resultados para "{query}"</p>
@@ -108,14 +133,17 @@ export default function RestaurantsSection({ destination }: { destination: Desti
                   key={place.id}
                   place={place}
                   selected={selectedId === place.id}
-                  onClick={() => setSelectedId(place.id)}
+                  added={addedIds.has(place.id)}
+                  pickerOpen={pickerOpenId === place.id}
+                  onClick={() => { setSelectedId(place.id); setPickerOpenId(null); }}
+                  onPickerToggle={() => setPickerOpenId(pickerOpenId === place.id ? null : place.id)}
+                  onAddToDay={(day) => handleAddToDay(place, day)}
                 />
               ))}
             </div>
           )}
         </div>
 
-        {/* Right — map */}
         <div className="w-72 flex-shrink-0 sticky top-16 h-[580px] rounded-2xl overflow-hidden shadow-md border border-gray-100">
           <POIMap
             places={filtered}
@@ -132,21 +160,65 @@ export default function RestaurantsSection({ destination }: { destination: Desti
 function RestaurantCard({
   place,
   selected,
+  added,
+  pickerOpen,
   onClick,
+  onPickerToggle,
+  onAddToDay,
 }: {
   place: Place;
   selected: boolean;
+  added: boolean;
+  pickerOpen: boolean;
   onClick: () => void;
+  onPickerToggle: () => void;
+  onAddToDay: (day: number) => void;
 }) {
   return (
-    <button
+    <div
       onClick={onClick}
-      className={`w-full text-left bg-white rounded-xl overflow-hidden shadow-sm border transition-all duration-200 ${
+      className={`relative w-full text-left bg-white rounded-xl overflow-hidden shadow-sm border transition-all duration-200 cursor-pointer ${
         selected
           ? "border-blue-500 shadow-md ring-1 ring-blue-200"
           : "border-gray-100 hover:border-gray-300 hover:shadow"
       }`}
     >
+      {/* Add to itinerary button */}
+      <button
+        onClick={(e) => { e.stopPropagation(); onPickerToggle(); }}
+        title="Agregar al itinerario"
+        className={`absolute top-1.5 right-1.5 z-10 w-6 h-6 rounded-full flex items-center justify-center shadow transition-colors ${
+          added
+            ? "bg-green-500 text-white"
+            : "bg-white/90 text-blue-500 hover:bg-blue-50"
+        }`}
+      >
+        {added ? <IoCheckmark className="text-xs" /> : <IoAdd className="text-sm" />}
+      </button>
+
+      {/* Day picker popover */}
+      {pickerOpen && (
+        <div
+          onClick={(e) => e.stopPropagation()}
+          className="absolute top-8 right-1.5 z-20 bg-white rounded-xl shadow-lg border border-gray-100 p-2 w-36"
+        >
+          <p className="text-[9px] font-semibold text-gray-400 uppercase tracking-wide mb-1.5 px-1">
+            Agregar al día
+          </p>
+          <div className="grid grid-cols-4 gap-1">
+            {[1, 2, 3, 4, 5, 6, 7].map((day) => (
+              <button
+                key={day}
+                onClick={() => onAddToDay(day)}
+                className="text-[11px] font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg py-1 transition-colors"
+              >
+                {day}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Image */}
       <div className="w-full h-28 bg-gray-100 overflow-hidden">
         {place.photoUrl ? (
@@ -159,7 +231,6 @@ function RestaurantCard({
       </div>
 
       <div className="p-2.5">
-        {/* Rating + Price */}
         <div className="flex items-center justify-between mb-1">
           <div className="flex items-center gap-1">
             {place.rating && (
@@ -186,24 +257,21 @@ function RestaurantCard({
           )}
         </div>
 
-        {/* Name */}
         <h3 className="font-semibold text-gray-800 text-xs leading-tight line-clamp-1">
           {place.name}
         </h3>
 
-        {/* Description */}
         {place.description && (
           <p className="text-[10px] text-gray-500 mt-1 line-clamp-2 leading-relaxed">
             {place.description}
           </p>
         )}
 
-        {/* Address */}
         <div className="flex items-start gap-1 mt-1.5">
           <IoLocationSharp className="text-gray-400 text-[9px] flex-shrink-0 mt-0.5" />
           <p className="text-[9px] text-gray-400 line-clamp-1">{place.address}</p>
         </div>
       </div>
-    </button>
+    </div>
   );
 }
