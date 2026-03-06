@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import dynamic from "next/dynamic";
-import { IoStar, IoLocationSharp, IoCompass, IoPricetag } from "react-icons/io5";
+import { IoStar, IoLocationSharp, IoCompass, IoPricetag, IoSearch } from "react-icons/io5";
 
 const POIMap = dynamic(() => import("./POIMap"), { ssr: false });
 
@@ -31,6 +31,7 @@ export default function PointsOfInterestSection({ destination }: { destination: 
   const [places, setPlaces] = useState<POI[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
 
   useEffect(() => {
     async function fetchPOIs() {
@@ -48,6 +49,17 @@ export default function PointsOfInterestSection({ destination }: { destination: 
     }
     fetchPOIs();
   }, [destination.lat, destination.lng]);
+
+  const filtered = useMemo(() => {
+    if (!query.trim()) return places;
+    const q = query.toLowerCase();
+    return places.filter(
+      (p) =>
+        p.name.toLowerCase().includes(q) ||
+        p.description?.toLowerCase().includes(q) ||
+        p.address.toLowerCase().includes(q)
+    );
+  }, [places, query]);
 
   if (loading) {
     return (
@@ -68,30 +80,50 @@ export default function PointsOfInterestSection({ destination }: { destination: 
   }
 
   return (
-    <div className="flex gap-5 px-4 max-w-6xl mx-auto pt-6 pb-8">
-      {/* Left — scrollable cards */}
-      <div className="w-80 flex-shrink-0 space-y-3 overflow-y-auto max-h-[620px] pr-1">
-        <p className="text-xs text-gray-400 uppercase tracking-wider font-medium mb-2">
-          {places.length} lugares encontrados
-        </p>
-        {places.map((poi) => (
-          <POICard
-            key={poi.id}
-            poi={poi}
-            selected={selectedId === poi.id}
-            onClick={() => setSelectedId(poi.id)}
-          />
-        ))}
+    <div className="px-4 max-w-6xl mx-auto pt-6 pb-8 space-y-4">
+
+      {/* Search bar */}
+      <div className="relative max-w-sm">
+        <IoSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Buscar lugar..."
+          className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 text-sm bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent"
+        />
       </div>
 
-      {/* Right — sticky map */}
-      <div className="flex-1 sticky top-16 h-[620px] rounded-2xl overflow-hidden shadow-md border border-gray-100">
-        <POIMap
-          places={places}
-          selectedId={selectedId}
-          onSelectId={setSelectedId}
-          center={{ lat: destination.lat, lng: destination.lng }}
-        />
+      {/* Main layout: cards grid + map */}
+      <div className="flex gap-4 items-start">
+
+        {/* Left — cards grid */}
+        <div className="flex-1 overflow-y-auto max-h-[580px] pr-1">
+          {filtered.length === 0 ? (
+            <p className="text-sm text-gray-400 py-10 text-center">Sin resultados para "{query}"</p>
+          ) : (
+            <div className="grid grid-cols-2 xl:grid-cols-3 gap-3">
+              {filtered.map((poi) => (
+                <POICard
+                  key={poi.id}
+                  poi={poi}
+                  selected={selectedId === poi.id}
+                  onClick={() => setSelectedId(poi.id)}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Right — smaller sticky map */}
+        <div className="w-72 flex-shrink-0 sticky top-16 h-[580px] rounded-2xl overflow-hidden shadow-md border border-gray-100">
+          <POIMap
+            places={filtered}
+            selectedId={selectedId}
+            onSelectId={setSelectedId}
+            center={{ lat: destination.lat, lng: destination.lng }}
+          />
+        </div>
       </div>
     </div>
   );
@@ -116,62 +148,58 @@ function POICard({
       }`}
     >
       {/* Image */}
-      <div className="w-full h-36 bg-gray-100 overflow-hidden">
+      <div className="w-full h-28 bg-gray-100 overflow-hidden">
         {poi.photoUrl ? (
-          <img
-            src={poi.photoUrl}
-            alt={poi.name}
-            className="w-full h-full object-cover"
-          />
+          <img src={poi.photoUrl} alt={poi.name} className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gray-50">
-            <IoCompass className="text-4xl text-gray-200" />
+            <IoCompass className="text-3xl text-gray-200" />
           </div>
         )}
       </div>
 
-      <div className="p-3">
+      <div className="p-2.5">
         {/* Rating + Price */}
-        <div className="flex items-center justify-between mb-1.5">
+        <div className="flex items-center justify-between mb-1">
           <div className="flex items-center gap-1">
             {poi.rating && (
               <>
-                <IoStar className="text-amber-400 text-xs" />
-                <span className="text-xs font-semibold text-gray-700">
+                <IoStar className="text-amber-400 text-[10px]" />
+                <span className="text-[11px] font-semibold text-gray-700">
                   {poi.rating.toFixed(1)}
                 </span>
                 {poi.ratingCount && (
-                  <span className="text-[10px] text-gray-400">
-                    ({poi.ratingCount.toLocaleString()})
+                  <span className="text-[9px] text-gray-400">
+                    ({poi.ratingCount > 999 ? `${(poi.ratingCount / 1000).toFixed(1)}k` : poi.ratingCount})
                   </span>
                 )}
               </>
             )}
           </div>
           {poi.priceLevel && (
-            <div className="flex items-center gap-1 text-gray-500">
-              <IoPricetag className="text-[10px]" />
-              <span className="text-xs font-medium">{poi.priceLevel}</span>
+            <div className="flex items-center gap-0.5 text-gray-500">
+              <IoPricetag className="text-[9px]" />
+              <span className="text-[10px] font-medium">{poi.priceLevel}</span>
             </div>
           )}
         </div>
 
         {/* Name */}
-        <h3 className="font-semibold text-gray-800 text-sm leading-tight line-clamp-1">
+        <h3 className="font-semibold text-gray-800 text-xs leading-tight line-clamp-1">
           {poi.name}
         </h3>
 
         {/* Description */}
         {poi.description && (
-          <p className="text-xs text-gray-500 mt-1 line-clamp-2 leading-relaxed">
+          <p className="text-[10px] text-gray-500 mt-1 line-clamp-2 leading-relaxed">
             {poi.description}
           </p>
         )}
 
         {/* Address */}
-        <div className="flex items-start gap-1 mt-2">
-          <IoLocationSharp className="text-gray-400 text-[11px] flex-shrink-0 mt-0.5" />
-          <p className="text-[10px] text-gray-400 line-clamp-1">{poi.address}</p>
+        <div className="flex items-start gap-1 mt-1.5">
+          <IoLocationSharp className="text-gray-400 text-[9px] flex-shrink-0 mt-0.5" />
+          <p className="text-[9px] text-gray-400 line-clamp-1">{poi.address}</p>
         </div>
       </div>
     </button>
