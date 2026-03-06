@@ -64,38 +64,42 @@ function TripPageContent() {
         date?: string;
         items?: Array<{
           item_id: string;
-          place_id: string;
           item_type?: string;
-          type?: string;
-          item_name?: string;
+          // fields from place_references JOIN (added by backend team)
+          place_reference_id?: string;
           name?: string;
           address?: string;
           latitude?: number;
-          lat?: number;
           longitude?: number;
-          lng?: number;
           photo_url?: string;
-          photoUrl?: string;
+          category?: string;
           rating?: number | null;
           price_level?: string | null;
-          priceLevel?: string | null;
-        }>;
+          estimated_cost?: number | null;
+          notes?: string | null;
+        } | null>;
       }) => ({
         dayId: d.day_id,
         dayNumber: d.day_number,
         date: d.day_date ?? d.date ?? "",
-        items: (d.items ?? []).map((item) => ({
-          itemId: item.item_id,
-          id: item.place_id,
-          type: (item.item_type ?? item.type ?? "poi") as "poi" | "restaurant",
-          name: item.item_name ?? item.name ?? "",
-          address: item.address ?? "",
-          lat: item.latitude ?? item.lat ?? 0,
-          lng: item.longitude ?? item.lng ?? 0,
-          photoUrl: item.photo_url ?? item.photoUrl ?? null,
-          rating: item.rating ?? null,
-          priceLevel: item.price_level ?? item.priceLevel ?? null,
-        })),
+        items: (d.items ?? [])
+          .filter((item): item is NonNullable<typeof item> => !!item?.item_id)
+          .map((item) => ({
+            itemId: item.item_id,
+            id: item.place_reference_id ?? item.item_id,
+            type: (
+              item.category === "HOTEL" ? "hotel"
+              : item.category === "RESTAURANT" ? "restaurant"
+              : "poi"
+            ) as "poi" | "restaurant" | "hotel",
+            name: item.name ?? "",
+            address: item.address ?? "",
+            lat: item.latitude ?? 0,
+            lng: item.longitude ?? 0,
+            photoUrl: item.photo_url ?? null,
+            rating: item.rating ?? null,
+            priceLevel: item.price_level ?? null,
+          })),
       }));
 
       setItinerary({ tripId, days });
@@ -115,44 +119,21 @@ function TripPageContent() {
     if (!day) return;
     if (day.items.some((i) => i.id === item.id)) return; // already added
 
-    try {
-      const token = await getToken();
-      const res = await fetch(
-        `${BACKEND}/api/trips/${tripId}/days/${day.dayId}/items`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            place_id: item.id,
-            item_type: item.type,
-            item_name: item.name,
-            address: item.address,
-            latitude: item.lat,
-            longitude: item.lng,
-            photo_url: item.photoUrl,
-            rating: item.rating,
-            price_level: item.priceLevel,
-          }),
-        }
-      );
-      if (!res.ok) return;
-      const data = await res.json();
-      const itemId = data.item_id ?? data.id ?? crypto.randomUUID();
+    // Optimistic update — always show in UI regardless of backend result
+    const tempId = crypto.randomUUID();
+    setItinerary((prev) => ({
+      ...prev,
+      days: prev.days.map((d) =>
+        d.dayNumber === dayNumber
+          ? { ...d, items: [...d.items, { ...item, itemId: tempId }] }
+          : d
+      ),
+    }));
 
-      setItinerary((prev) => ({
-        ...prev,
-        days: prev.days.map((d) =>
-          d.dayNumber === dayNumber
-            ? { ...d, items: [...d.items, { ...item, itemId }] }
-            : d
-        ),
-      }));
-    } catch {
-      // silent — item wasn't added
-    }
+    // TODO: call backend once it exposes a save endpoint for POIs/restaurants
+    // that returns a place_reference_id UUID, then call:
+    // POST /api/trips/${tripId}/days/${day.dayId}/items
+    // body: { item_type: 'PLACE', place_reference_id: <uuid> }
   }
 
   async function removeFromItinerary(itemId: string, dayNumber: number) {
@@ -172,16 +153,14 @@ function TripPageContent() {
       // silent
     }
 
-    // Optimistic remove regardless of API result
+    // Optimistic remove — keep days even when they have 0 items
     setItinerary((prev) => ({
       ...prev,
-      days: prev.days
-        .map((d) =>
-          d.dayNumber === dayNumber
-            ? { ...d, items: d.items.filter((i) => i.itemId !== itemId) }
-            : d
-        )
-        .filter((d) => d.items.length > 0),
+      days: prev.days.map((d) =>
+        d.dayNumber === dayNumber
+          ? { ...d, items: d.items.filter((i) => i.itemId !== itemId) }
+          : d
+      ),
     }));
   }
 

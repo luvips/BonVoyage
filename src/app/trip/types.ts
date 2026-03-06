@@ -1,7 +1,7 @@
 export type ItineraryItem = {
   itemId?: string;      // UUID from itinerary_items table (assigned after API save, used for DELETE)
   id: string;           // place ID (Google Places / POI ID, used to detect duplicates)
-  type: "poi" | "restaurant";
+  type: "poi" | "restaurant" | "hotel";
   name: string;
   address: string;
   lat: number;
