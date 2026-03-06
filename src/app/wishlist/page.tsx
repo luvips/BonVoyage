@@ -8,6 +8,29 @@ import Link from "next/link";
 
 const BACKEND = "https://bonvoyage-backend.vercel.app";
 
+const MONTH_NAMES = ["", "Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+
+function parsePopularMonths(raw: string): string {
+  if (raw.includes(",")) {
+    return raw.split(",").map((n) => MONTH_NAMES[parseInt(n)] ?? n).filter(Boolean).join(", ");
+  }
+  // Parse digit sequence greedily: try 2-digit (Oct–Dec) then 1-digit
+  const months: string[] = [];
+  let i = 0;
+  while (i < raw.length) {
+    const two = parseInt(raw.slice(i, i + 2));
+    if (i + 1 < raw.length && two >= 10 && two <= 12) {
+      months.push(MONTH_NAMES[two]);
+      i += 2;
+    } else {
+      const one = parseInt(raw[i]);
+      if (one >= 1 && one <= 9) months.push(MONTH_NAMES[one]);
+      i += 1;
+    }
+  }
+  return months.length > 0 ? months.join(", ") : raw;
+}
+
 type WishlistItem = {
   wishlist_id: string;
   city: string;
@@ -177,7 +200,7 @@ function WishlistCard({
         )}
         {item.popular_months && (
           <p className="text-xs text-gray-400">
-            Mejor época: <span className="text-gray-600">{item.popular_months}</span>
+            Mejor época: <span className="text-gray-600">{parsePopularMonths(item.popular_months)}</span>
           </p>
         )}
         <Link
