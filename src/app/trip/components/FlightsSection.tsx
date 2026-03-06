@@ -163,7 +163,7 @@ export default function FlightsSection({
 
   return (
     <div>
-      {/* Search card */}
+      
       <div className="-mt-18 relative z-10 px-4 max-w-5xl mx-auto mb-6">
         <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 p-5">
 
