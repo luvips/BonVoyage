@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
-import { IoIosGlobe } from "react-icons/io";
 import { IoAirplane, IoCalendarOutline, IoChevronForward } from "react-icons/io5";
 import Link from "next/link";
+import Header from "@/app/components/Header";
 
 const BACKEND = "https://bonvoyage-backend.vercel.app";
 
@@ -51,15 +51,7 @@ export default function MyTripsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-100 px-6 py-4 flex items-center gap-3">
-        <Link href="/dashboard" className="flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-800 transition-colors">
-          <IoIosGlobe className="text-lg text-blue-500" />
-          Bon Voyage
-        </Link>
-        <span className="text-gray-300">/</span>
-        <span className="text-sm font-semibold text-gray-800">Mis viajes</span>
-      </div>
+      <Header variant="light" />
 
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-6">

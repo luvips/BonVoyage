@@ -3,7 +3,7 @@
 import React from "react";
 import { motion } from "motion/react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { IoIosGlobe } from "react-icons/io";
 import { IoSearchOutline } from "react-icons/io5";
 import { SignedIn, SignedOut, SignInButton, SignUpButton, UserButton } from "@clerk/nextjs";
@@ -21,24 +21,32 @@ type Props = {
 
 function Header({ variant = "dark", onSearch }: Props) {
     const pathname = usePathname();
+    const router = useRouter();
     const [query, setQuery] = React.useState("");
     const [loading, setLoading] = React.useState(false);
 
     const handleSearch = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        if (!query.trim() || !onSearch) return;
+        if (!query.trim()) return;
         setLoading(true);
-        const response = await fetch(
-            `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}&language=es&limit=1`
-        );
-        const data = await response.json();
-        const feature = data.features?.[0];
-        if (feature) {
-            const [lng, lat] = feature.center;
-            onSearch({ name: feature.place_name, lng, lat });
-            setQuery("");
+        try {
+            const response = await fetch(
+                `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}&language=es&limit=1`
+            );
+            const data = await response.json();
+            const feature = data.features?.[0];
+            if (feature) {
+                const [lng, lat] = feature.center;
+                if (onSearch) {
+                    onSearch({ name: feature.place_name, lng, lat });
+                } else {
+                    router.push(`/dashboard`);
+                }
+                setQuery("");
+            }
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
     };
 
     const isLight = variant === "light";
@@ -70,22 +78,20 @@ function Header({ variant = "dark", onSearch }: Props) {
                     </motion.li>
                 ))}
 
-                {onSearch && (
-                    <li>
-                        <form onSubmit={handleSearch} className={`flex items-center gap-1 border-b ${isLight ? "border-gray-300" : "border-white/40"} pb-0.5`}>
-                            <input
-                                type="text"
-                                value={query}
-                                onChange={(e) => setQuery(e.target.value)}
-                                placeholder="¿A dónde vas a viajar?"
-                                className={`bg-transparent outline-none text-[11px] uppercase tracking-wider placeholder:normal-case placeholder:tracking-normal w-32 md:w-44 ${isLight ? "placeholder:text-gray-400 text-gray-700" : "placeholder:text-white/50 text-white"}`}
-                            />
-                            <button type="submit" disabled={loading} className={`${isLight ? "text-gray-500 hover:text-gray-800" : "text-white/70 hover:text-white"} transition-colors`}>
-                                <IoSearchOutline className="text-base" />
-                            </button>
-                        </form>
-                    </li>
-                )}
+                <li>
+                    <form onSubmit={handleSearch} className={`flex items-center gap-1 border-b ${isLight ? "border-gray-300" : "border-white/40"} pb-0.5`}>
+                        <input
+                            type="text"
+                            value={query}
+                            onChange={(e) => setQuery(e.target.value)}
+                            placeholder="¿A dónde vas a viajar?"
+                            className={`bg-transparent outline-none text-[11px] uppercase tracking-wider placeholder:normal-case placeholder:tracking-normal w-32 md:w-44 ${isLight ? "placeholder:text-gray-400 text-gray-700" : "placeholder:text-white/50 text-white"}`}
+                        />
+                        <button type="submit" disabled={loading} className={`${isLight ? "text-gray-500 hover:text-gray-800" : "text-white/70 hover:text-white"} transition-colors`}>
+                            <IoSearchOutline className="text-base" />
+                        </button>
+                    </form>
+                </li>
 
                 <div className="flex items-center gap-4">
                     <SignedOut>
@@ -130,9 +136,7 @@ function Header({ variant = "dark", onSearch }: Props) {
 export default Header;
 
 const menus = [
-    { label: "Home",          href: "/"             },
-    { label: "Sobre Nosotros",href: "/about"        },
-    { label: "Destinos",      href: "/destinations" },
-    { label: "Blog",          href: "/blog"         },
-    { label: "DiscoveryMap",  href: "/dashboard"    },
+    { label: "Home",         href: "/"             },
+    { label: "Destinos",     href: "/destinations" },
+    { label: "DiscoveryMap", href: "/dashboard"    },
 ];
