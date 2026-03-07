@@ -82,7 +82,8 @@ function TripPageContent() {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error(`Error ${res.status}`);
-      const data = await res.json();
+      const json = await res.json();
+      const data = json.data ?? json;
 
       // Map backend response to our DayPlan shape
       const days: DayPlan[] = (data.days ?? []).map((d: {
