@@ -89,6 +89,17 @@ function TripPageContent() {
           place_price_level?: string | null;
           estimated_cost?: number | null;
           notes?: string | null;
+          // flight item fields
+          airline_code?: string | null;
+          flight_airline?: string | null;
+          origin_airport?: string | null;
+          flight_origin?: string | null;
+          destination_airport?: string | null;
+          flight_destination?: string | null;
+          departure_time?: string | null;
+          flight_departure?: string | null;
+          price?: number | null;
+          flight_price?: number | null;
         } | null>;
       }) => ({
         dayId: d.day_id,
@@ -115,6 +126,29 @@ function TripPageContent() {
       }));
 
       setItinerary({ tripId, days });
+
+      // Restore "Mis ubicaciones" from persisted items
+      for (const d of (data.days ?? [])) {
+        for (const item of (d.items ?? [])) {
+          if (!item) continue;
+          if (item.place_category === "HOTEL" && item.place_name) {
+            setSavedHotel({
+              name: item.place_name,
+              imageUrl: item.place_photo_url ?? null,
+              price: item.estimated_cost ? `$${item.estimated_cost}` : "",
+            });
+          }
+          if (item.item_type === "FLIGHT") {
+            setSavedFlight({
+              airline: item.airline_code ?? item.flight_airline ?? "Aerolínea",
+              origin: item.origin_airport ?? item.flight_origin ?? null,
+              destination: item.destination_airport ?? item.flight_destination ?? null,
+              departure: item.departure_time ?? item.flight_departure ?? null,
+              price: item.price ?? item.flight_price ?? item.estimated_cost ?? null,
+            });
+          }
+        }
+      }
 
       // Store trip-level metadata to fill in missing URL params
       setTripMeta({
