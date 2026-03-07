@@ -24,7 +24,7 @@ export default function ProblemSection() {
         <section className="bg-slate-50 px-6 py-24 md:px-16 lg:px-24">
             <div className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-16 md:grid-cols-2">
 
-                {/* Lado izquierdo */}
+          
                 <div className="flex flex-col gap-6">
                     <div className="flex items-center gap-3">
                         <span className="h-[2px] w-6 bg-cyan-500" />
@@ -33,7 +33,7 @@ export default function ProblemSection() {
                         </span>
                     </div>
 
-                    <h2 className="text-4xl font-bold leading-tight text-slate-900 md:text-5xl lg:text-6xl">
+                    <h2 className="text-4xl font-medium leading-tight text-slate-800 md:text-5xl lg:text-6xl">
                         Planificar un viaje{" "}
                         <span className="italic text-cyan-600">no debería ser</span>{" "}
                         tan complicado
@@ -45,7 +45,7 @@ export default function ProblemSection() {
                     </p>
                 </div>
 
-                {/* Lado derecho */}
+               
                 <div className="flex flex-col gap-3">
                     {problems.map(({ icon, bold, rest }) => (
                         <div
@@ -62,12 +62,12 @@ export default function ProblemSection() {
                         </div>
                     ))}
 
-                    {/* Flecha */}
+                   
                     <div className="flex justify-center py-2">
                         <IoArrowDownOutline className="text-2xl text-cyan-500" />
                     </div>
 
-                    {/* Solución */}
+                    
                     <div className="flex items-center gap-4 rounded-xl border border-cyan-200 bg-cyan-50 px-5 py-4 text-sm">
                         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-cyan-500">
                             <IoCheckmarkCircle className="text-xl text-white" />
