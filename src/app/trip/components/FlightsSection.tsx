@@ -110,6 +110,7 @@ export default function FlightsSection({
 
   async function handleSaveFlight(vuelo: Vuelo, dayId: string) {
     if (!tripId) return;
+    if (dayId.startsWith("placeholder-")) return;
     const token = await getToken();
     const firstLeg = vuelo.tramos?.[0];
     const saveRes = await fetch(`${BACKEND}/api/flights/save`, {
@@ -383,6 +384,7 @@ function FlightCard({
 
   async function handleAddToDay(dayId: string) {
     if (!onSaveToDay) return;
+    if (dayId.startsWith("placeholder-")) return;
     setSaving(true);
     try {
       await onSaveToDay(vuelo, dayId);
@@ -480,16 +482,22 @@ function FlightCard({
                 Selecciona el día
               </p>
               <div className="flex flex-wrap gap-1.5">
-                {(tripDays ?? []).map((d) => (
-                  <button
-                    key={d.dayId}
-                    onClick={() => handleAddToDay(d.dayId)}
-                    disabled={saving}
-                    className="text-xs font-medium px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-blue-500 hover:text-white text-gray-700 transition-colors disabled:opacity-50"
-                  >
-                    {saving ? "..." : `Día ${d.dayNumber}`}
-                  </button>
-                ))}
+                {(tripDays ?? []).filter((d) => !d.dayId.startsWith("placeholder-")).length === 0 ? (
+                  <p className="text-[11px] text-gray-400 italic">Cargando días del viaje...</p>
+                ) : (
+                  (tripDays ?? [])
+                    .filter((d) => !d.dayId.startsWith("placeholder-"))
+                    .map((d) => (
+                      <button
+                        key={d.dayId}
+                        onClick={() => handleAddToDay(d.dayId)}
+                        disabled={saving}
+                        className="text-xs font-medium px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-blue-500 hover:text-white text-gray-700 transition-colors disabled:opacity-50"
+                      >
+                        {saving ? "..." : `Día ${d.dayNumber}`}
+                      </button>
+                    ))
+                )}
                 <button
                   onClick={() => setPickerOpen(false)}
                   className="text-xs text-gray-400 hover:text-gray-600 px-2"
