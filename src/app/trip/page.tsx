@@ -10,7 +10,7 @@ import HotelsSection from "./components/HotelsSection";
 import PointsOfInterestSection from "./components/PointsOfInterestSection";
 import RestaurantsSection from "./components/RestaurantsSection";
 import ItinerarySection from "./components/ItinerarySection";
-import { IoHeart, IoHeartOutline } from "react-icons/io5";
+import { IoHeart, IoHeartOutline, IoCheckmarkCircle, IoCloseCircle, IoTrophy, IoEllipsisHorizontalCircle } from "react-icons/io5";
 import type { ItineraryItem, TripItinerary, DayPlan } from "./types";
 
 export type TripSection = "vuelos" | "hospedaje" | "puntos" | "restaurantes" | "itinerario";
@@ -47,6 +47,8 @@ function TripPageContent() {
   const [tripError, setTripError] = useState<string | null>(null);
   const [isFavorite, setIsFavorite] = useState(false);
   const togglingFav = useRef(false);
+  const [tripStatus, setTripStatus] = useState<"DRAFT" | "CONFIRMED" | "COMPLETED" | "CANCELLED">("DRAFT");
+  const [changingStatus, setChangingStatus] = useState(false);
   const [tripMeta, setTripMeta] = useState<{
     startDate: string;
     endDate: string;
@@ -191,6 +193,7 @@ function TripPageContent() {
       }
 
       setIsFavorite(data.is_favorite ?? false);
+      setTripStatus(data.status ?? "DRAFT");
 
       // Store trip-level metadata to fill in missing URL params
       setTripMeta({
@@ -228,6 +231,26 @@ function TripPageContent() {
       setIsFavorite(!next); // revert
     } finally {
       togglingFav.current = false;
+    }
+  }
+
+  async function changeStatus(action: "confirm" | "cancel" | "complete") {
+    if (!tripId || changingStatus) return;
+    setChangingStatus(true);
+    try {
+      const token = await getToken();
+      const res = await fetch(`${BACKEND}/api/trips/${tripId}/${action}`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error(`Error ${res.status}`);
+      const json = await res.json();
+      const data = json.data ?? json;
+      setTripStatus(data.status ?? (action === "confirm" ? "CONFIRMED" : action === "cancel" ? "CANCELLED" : "COMPLETED"));
+    } catch {
+      // silent — keep current status
+    } finally {
+      setChangingStatus(false);
     }
   }
 
@@ -413,6 +436,73 @@ function TripPageContent() {
     <div className="flex flex-col min-h-screen bg-gray-50">
       <TripHeader />
       <TripNav active={activeSection} onChange={handleSectionChange} />
+
+      {/* Status bar */}
+      {tripId && (
+        <div className="max-w-6xl mx-auto w-full px-4 pt-4">
+          <div className="flex items-center gap-3 bg-white border border-cyan-100 rounded-2xl px-5 py-3 shadow-sm">
+            {/* Status badge */}
+            <div className="flex items-center gap-2 flex-1">
+              {tripStatus === "DRAFT" && (
+                <><IoEllipsisHorizontalCircle className="text-cyan-400 text-xl flex-shrink-0" /><span className="text-sm font-semibold text-cyan-600">Borrador</span></>
+              )}
+              {tripStatus === "CONFIRMED" && (
+                <><IoCheckmarkCircle className="text-cyan-500 text-xl flex-shrink-0" /><span className="text-sm font-semibold text-cyan-700">Confirmado</span></>
+              )}
+              {tripStatus === "COMPLETED" && (
+                <><IoTrophy className="text-cyan-600 text-xl flex-shrink-0" /><span className="text-sm font-semibold text-cyan-800">Completado</span></>
+              )}
+              {tripStatus === "CANCELLED" && (
+                <><IoCloseCircle className="text-red-400 text-xl flex-shrink-0" /><span className="text-sm font-semibold text-red-500">Cancelado</span></>
+              )}
+            </div>
+
+            {/* Action buttons */}
+            <div className="flex items-center gap-2">
+              {tripStatus === "DRAFT" && (
+                <>
+                  <button
+                    onClick={() => changeStatus("confirm")}
+                    disabled={changingStatus}
+                    className="px-4 py-1.5 bg-cyan-500 hover:bg-cyan-600 disabled:opacity-50 text-white text-xs font-semibold rounded-xl transition-colors flex items-center gap-1.5"
+                  >
+                    <IoCheckmarkCircle className="text-sm" />
+                    Confirmar
+                  </button>
+                  <button
+                    onClick={() => changeStatus("cancel")}
+                    disabled={changingStatus}
+                    className="px-4 py-1.5 bg-white hover:bg-red-50 disabled:opacity-50 text-red-400 border border-red-200 text-xs font-semibold rounded-xl transition-colors flex items-center gap-1.5"
+                  >
+                    <IoCloseCircle className="text-sm" />
+                    Cancelar
+                  </button>
+                </>
+              )}
+              {tripStatus === "CONFIRMED" && (
+                <>
+                  <button
+                    onClick={() => changeStatus("complete")}
+                    disabled={changingStatus}
+                    className="px-4 py-1.5 bg-cyan-500 hover:bg-cyan-600 disabled:opacity-50 text-white text-xs font-semibold rounded-xl transition-colors flex items-center gap-1.5"
+                  >
+                    <IoTrophy className="text-sm" />
+                    Marcar completado
+                  </button>
+                  <button
+                    onClick={() => changeStatus("cancel")}
+                    disabled={changingStatus}
+                    className="px-4 py-1.5 bg-white hover:bg-red-50 disabled:opacity-50 text-red-400 border border-red-200 text-xs font-semibold rounded-xl transition-colors flex items-center gap-1.5"
+                  >
+                    <IoCloseCircle className="text-sm" />
+                    Cancelar
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Destination hero */}
       <div className="max-w-6xl mx-auto w-full px-4 pt-6">
