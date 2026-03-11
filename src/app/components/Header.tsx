@@ -96,7 +96,7 @@ function Header({ variant = "dark", onSearch }: Props) {
                 <div className="flex items-center gap-4">
                     <SignedOut>
                         <SignInButton mode="modal">
-                            <button className={`px-3 py-1 rounded border ${isLight ? "border-gray-400 text-gray-700 hover:bg-gray-100" : "border-white/50 hover:bg-white hover:text-black"} transition duration-300`}>
+                            <button data-testid="sign-in-button" className={`px-3 py-1 rounded border ${isLight ? "border-gray-400 text-gray-700 hover:bg-gray-100" : "border-white/50 hover:bg-white hover:text-black"} transition duration-300`}>
                                 Sign In
                             </button>
                         </SignInButton>
