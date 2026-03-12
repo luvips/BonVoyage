@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { useAuth } from "@clerk/nextjs";
 
-const BACKEND = "https://bonvoyage-backend.vercel.app";
+const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL ?? "";
 const MIN_SECONDS = 2; // no enviar si estuvo menos de 2 segundos
 
 /**

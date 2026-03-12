@@ -7,7 +7,7 @@ import {
   IoClose, IoAirplane, IoCalendarOutline, IoWallet, IoChevronBack,
 } from "react-icons/io5";
 
-const BACKEND = "https://bonvoyage-backend.vercel.app";
+const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL ?? "";
 
 type Place = {
   name: string;

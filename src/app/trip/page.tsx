@@ -17,7 +17,7 @@ import { useTripTimeTracker } from "@/hooks/useTripTimeTracker";
 
 export type TripSection = "vuelos" | "hospedaje" | "puntos" | "restaurantes" | "itinerario";
 
-const BACKEND = "https://bonvoyage-backend.vercel.app";
+const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL ?? "";
 
 function TripPageContent() {
   const searchParams = useSearchParams();

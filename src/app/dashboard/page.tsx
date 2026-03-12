@@ -10,7 +10,7 @@ import CreateTripWizard from "./components/CreateTripWizard";
 
 const MapView = dynamic(() => import("./components/MapView"), { ssr: false });
 
-const BACKEND = "https://bonvoyage-backend.vercel.app";
+const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL ?? "";
 
 type SelectedPlace = {
   name: string;

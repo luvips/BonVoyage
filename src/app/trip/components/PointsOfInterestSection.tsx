@@ -35,7 +35,7 @@ type Props = {
   onAddToItinerary: (item: ItineraryItem, dayNumber: number) => void;
 };
 
-const BACKEND = "https://bonvoyage-backend.vercel.app";
+const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL ?? "";
 
 export default function PointsOfInterestSection({ destination, tripDays, onAddToItinerary }: Props) {
   const { getToken } = useAuth();

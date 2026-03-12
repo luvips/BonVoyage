@@ -7,7 +7,7 @@ import { IoAirplane, IoCalendarOutline, IoChevronForward, IoHeart, IoHeartOutlin
 import Link from "next/link";
 import Header from "@/app/components/Header";
 
-const BACKEND = "https://bonvoyage-backend.vercel.app";
+const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL ?? "";
 
 type Trip = {
   trip_id: string;

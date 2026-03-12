@@ -54,7 +54,7 @@ function tomorrow() {
   return d.toISOString().slice(0, 10);
 }
 
-const BACKEND = "https://bonvoyage-backend.vercel.app";
+const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL ?? "";
 
 type TripDay = { dayId: string; dayNumber: number; date: string };
 type SavedHotelInfo = { name: string; imageUrl: string | null; price: string; externalId?: string };
@@ -122,7 +122,7 @@ export default function HotelsSection({
       });
 
       const res = await fetch(
-        `https://bonvoyage-backend.vercel.app/api/hotels/search?${params}`,
+        `${BACKEND}/api/hotels/search?${params}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 

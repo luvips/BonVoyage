@@ -8,7 +8,7 @@ import {
 } from "react-icons/io5";
 import type { TripDay } from "../types";
 
-const BACKEND = "https://bonvoyage-backend.vercel.app";
+const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL ?? "";
 
 type TripType = "ida-vuelta" | "solo-ida" | "multidestino";
 

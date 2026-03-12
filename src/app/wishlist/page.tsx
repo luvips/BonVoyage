@@ -6,7 +6,7 @@ import { IoBookmark, IoLocationSharp, IoAirplane, IoTrash } from "react-icons/io
 import Link from "next/link";
 import Header from "@/app/components/Header";
 
-const BACKEND = "https://bonvoyage-backend.vercel.app";
+const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL ?? "";
 
 const MONTH_NAMES = ["", "Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
 
