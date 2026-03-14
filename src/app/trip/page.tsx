@@ -279,6 +279,7 @@ function TripPageContent() {
   }
 
   async function addToItinerary(item: ItineraryItem, dayNumber: number) {
+    if (tripStatus !== "DRAFT") return; // trip locked
     const day = itinerary.days.find((d) => d.dayNumber === dayNumber);
     if (day?.items.some((i) => i.id === item.id)) return; // already added
 
@@ -348,6 +349,7 @@ function TripPageContent() {
   }
 
   async function removeFromItinerary(itemId: string, dayNumber: number) {
+    if (tripStatus !== "DRAFT") return; // trip locked
     const day = itinerary.days.find((d) => d.dayNumber === dayNumber);
     if (!day) return;
 
@@ -432,6 +434,7 @@ function TripPageContent() {
         destination={destination}
         tripDays={tripDays}
         onAddToItinerary={addToItinerary}
+        readOnly={tripStatus !== "DRAFT"}
       />
     ),
     restaurantes: (
@@ -439,6 +442,7 @@ function TripPageContent() {
         destination={destination}
         tripDays={tripDays}
         onAddToItinerary={addToItinerary}
+        readOnly={tripStatus !== "DRAFT"}
       />
     ),
     itinerario: (
@@ -447,6 +451,7 @@ function TripPageContent() {
         onRemove={removeFromItinerary}
         savedHotel={savedHotel}
         savedFlight={savedFlight}
+        readOnly={tripStatus !== "DRAFT"}
         center={
           destination.lat && destination.lng
             ? { lat: destination.lat, lng: destination.lng }

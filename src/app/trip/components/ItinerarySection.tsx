@@ -19,6 +19,7 @@ type Props = {
   savedHotel?: SavedHotel | null;
   savedFlight?: SavedFlight | null;
   center?: { lat: number; lng: number };
+  readOnly?: boolean;
 };
 
 function formatTime(iso: string | null) {
@@ -26,7 +27,7 @@ function formatTime(iso: string | null) {
   return new Date(iso).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit", hour12: false });
 }
 
-export default function ItinerarySection({ itinerary, onRemove, savedHotel, savedFlight, center }: Props) {
+export default function ItinerarySection({ itinerary, onRemove, savedHotel, savedFlight, center, readOnly = false }: Props) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const totalItems = itinerary.days.reduce((sum, d) => sum + d.items.length, 0);
@@ -172,6 +173,7 @@ export default function ItinerarySection({ itinerary, onRemove, savedHotel, save
                   selected={selectedId === item.id}
                   onSelect={() => setSelectedId(item.type !== "flight" ? item.id : null)}
                   onRemove={() => onRemove(item.itemId ?? item.id, day.dayNumber)}
+                  readOnly={readOnly}
                 />
               ))}
             </div>
@@ -215,19 +217,23 @@ function ItineraryCard({
   selected,
   onSelect,
   onRemove,
+  readOnly = false,
 }: {
   item: ItineraryItem;
   selected: boolean;
   onSelect: () => void;
   onRemove: () => void;
+  readOnly?: boolean;
 }) {
   if (item.type === "flight") {
     return (
       <div className="relative bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 group">
-        <button onClick={onRemove} title="Eliminar"
-          className="absolute top-1.5 right-1.5 z-10 w-6 h-6 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50">
-          <IoTrash className="text-red-400 text-xs" />
-        </button>
+        {!readOnly && (
+          <button onClick={onRemove} title="Eliminar"
+            className="absolute top-1.5 right-1.5 z-10 w-6 h-6 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50">
+            <IoTrash className="text-red-400 text-xs" />
+          </button>
+        )}
         <div className="w-full h-24 bg-blue-50 flex items-center justify-center">
           <IoAirplane className="text-3xl text-blue-300" />
         </div>
@@ -254,13 +260,15 @@ function ItineraryCard({
         selected ? "border-blue-400 shadow-md ring-1 ring-blue-200" : "border-gray-100 hover:border-gray-300"
       }`}
     >
-      <button
-        onClick={(e) => { e.stopPropagation(); onRemove(); }}
-        title="Eliminar"
-        className="absolute top-1.5 right-1.5 z-10 w-6 h-6 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50"
-      >
-        <IoTrash className="text-red-400 text-xs" />
-      </button>
+      {!readOnly && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onRemove(); }}
+          title="Eliminar"
+          className="absolute top-1.5 right-1.5 z-10 w-6 h-6 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50"
+        >
+          <IoTrash className="text-red-400 text-xs" />
+        </button>
+      )}
 
       <div className="w-full h-24 bg-gray-100 overflow-hidden">
         {item.photoUrl ? (

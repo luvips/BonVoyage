@@ -33,11 +33,12 @@ type Props = {
   destination: Destination;
   tripDays?: TripDay[];
   onAddToItinerary: (item: ItineraryItem, dayNumber: number) => void;
+  readOnly?: boolean;
 };
 
 const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL ?? "";
 
-export default function RestaurantsSection({ destination, tripDays, onAddToItinerary }: Props) {
+export default function RestaurantsSection({ destination, tripDays, onAddToItinerary, readOnly = false }: Props) {
   const { getToken } = useAuth();
   const days: TripDay[] = tripDays ?? [];
   const [places, setPlaces] = useState<Place[]>([]);
@@ -228,7 +229,11 @@ export default function RestaurantsSection({ destination, tripDays, onAddToItine
                   </div>
 
                   {/* Add to itinerary */}
-                  {!detailPickerOpen ? (
+                  {readOnly ? (
+                    <div className="w-full mt-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold bg-gray-100 text-gray-400 border border-gray-200">
+                      Viaje confirmado — solo lectura
+                    </div>
+                  ) : !detailPickerOpen ? (
                     <button
                       onClick={() => setDetailPickerOpen(true)}
                       className={`w-full mt-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold transition-colors ${
