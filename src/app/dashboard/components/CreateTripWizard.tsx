@@ -28,6 +28,18 @@ export default function CreateTripWizard({ place, onClose }: Props) {
   const { getToken } = useAuth();
   const router = useRouter();
 
+  const [description, setDescription] = useState<string | null>(null);
+
+  useEffect(() => {
+    const name = place.name.split(",")[0].trim();
+    fetch(`https://es.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(name)}`)
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        if (data?.extract) setDescription(data.extract);
+      })
+      .catch(() => {});
+  }, [place.name]);
+
   // Restore from sessionStorage if available (survives page reload mid-wizard)
   const saved = (() => {
     try {
@@ -189,9 +201,15 @@ export default function CreateTripWizard({ place, onClose }: Props) {
             <div className="space-y-4">
               <div>
                 <h2 className="text-lg font-bold text-gray-800">Crear viaje</h2>
-                <p className="text-sm text-gray-500 mt-1">
-                  Para planificar tu viaje necesitamos primero los detalles de tus vuelos. Esto nos permitirá organizar tu itinerario día a día.
-                </p>
+                {description ? (
+                  <p className="text-sm text-gray-500 mt-2 leading-relaxed line-clamp-4">{description}</p>
+                ) : (
+                  <div className="mt-2 space-y-1.5">
+                    <div className="h-3 bg-gray-100 rounded animate-pulse w-full" />
+                    <div className="h-3 bg-gray-100 rounded animate-pulse w-5/6" />
+                    <div className="h-3 bg-gray-100 rounded animate-pulse w-4/6" />
+                  </div>
+                )}
               </div>
               <button
                 onClick={() => setStep(2)}
