@@ -10,7 +10,7 @@ import HotelsSection from "./components/HotelsSection";
 import PointsOfInterestSection from "./components/PointsOfInterestSection";
 import RestaurantsSection from "./components/RestaurantsSection";
 import ItinerarySection from "./components/ItinerarySection";
-import { IoHeart, IoHeartOutline, IoCheckmarkCircle, IoCloseCircle, IoTrophy, IoEllipsisHorizontalCircle, IoTrashOutline } from "react-icons/io5";
+import { IoHeart, IoHeartOutline, IoCheckmarkCircle, IoCloseCircle, IoTrophy, IoEllipsisHorizontalCircle, IoTrashOutline, IoPencilOutline, IoClose, IoWallet } from "react-icons/io5";
 import { useRouter } from "next/navigation";
 import type { ItineraryItem, TripItinerary, DayPlan } from "./types";
 import { useTripTimeTracker } from "@/hooks/useTripTimeTracker";
@@ -57,6 +57,13 @@ function TripPageContent() {
   useTripTimeTracker(tripId, tripStatus === "DRAFT");
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deletingTrip, setDeletingTrip] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [editStart, setEditStart] = useState("");
+  const [editEnd, setEditEnd] = useState("");
+  const [editBudget, setEditBudget] = useState("");
+  const [editCurrency, setEditCurrency] = useState("USD");
+  const [savingEdit, setSavingEdit] = useState(false);
   const [tripMeta, setTripMeta] = useState<{
     startDate: string;
     endDate: string;
@@ -259,6 +266,41 @@ function TripPageContent() {
       // silent — keep current status
     } finally {
       setChangingStatus(false);
+    }
+  }
+
+  function openEdit() {
+    setEditName(destination.name ?? "");
+    setEditStart(tripMeta?.startDate ?? wizardFlightParams.startDate ?? "");
+    setEditEnd(tripMeta?.endDate ?? wizardFlightParams.endDate ?? "");
+    setEditBudget("");
+    setEditCurrency("USD");
+    setEditOpen(true);
+  }
+
+  async function saveEdit() {
+    if (!tripId || savingEdit) return;
+    setSavingEdit(true);
+    try {
+      const token = await getToken();
+      const body: Record<string, unknown> = {
+        trip_name: editName,
+        start_date: editStart,
+        end_date: editEnd,
+      };
+      if (editBudget) body.total_budget = parseFloat(editBudget);
+      body.currency = editCurrency;
+      await fetch(`${BACKEND}/api/trips/${tripId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify(body),
+      });
+      setTripMeta((prev) => prev ? { ...prev, startDate: editStart, endDate: editEnd } : prev);
+      setEditOpen(false);
+    } catch {
+      // silent
+    } finally {
+      setSavingEdit(false);
     }
   }
 
@@ -486,6 +528,17 @@ function TripPageContent() {
               )}
             </div>
 
+            {/* Edit — solo en DRAFT */}
+            {tripStatus === "DRAFT" && !confirmingDelete && (
+              <button
+                onClick={openEdit}
+                title="Editar viaje"
+                className="p-2 rounded-full hover:bg-cyan-50 transition-colors flex-shrink-0"
+              >
+                <IoPencilOutline className="text-gray-300 hover:text-cyan-400 text-lg transition-colors" />
+              </button>
+            )}
+
             {/* Delete */}
             {confirmingDelete ? (
               <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -612,6 +665,100 @@ function TripPageContent() {
       <main className="flex-1 w-full pt-0 pb-6">
         {sectionComponents[activeSection]}
       </main>
+
+      {/* Modal editar viaje */}
+      {editOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+              <h2 className="text-base font-bold text-gray-800">Editar viaje</h2>
+              <button onClick={() => setEditOpen(false)} className="p-1 rounded-full hover:bg-gray-100 transition-colors">
+                <IoClose className="text-gray-400 text-lg" />
+              </button>
+            </div>
+
+            <div className="px-5 py-4 space-y-4">
+              <div>
+                <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Nombre del viaje</label>
+                <input
+                  type="text"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="w-full mt-1 px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-300"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Ida</label>
+                  <input
+                    type="date"
+                    value={editStart}
+                    onChange={(e) => setEditStart(e.target.value)}
+                    className="w-full mt-1 px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-300"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Vuelta</label>
+                  <input
+                    type="date"
+                    value={editEnd}
+                    min={editStart}
+                    onChange={(e) => setEditEnd(e.target.value)}
+                    className="w-full mt-1 px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-300"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2">
+                <div className="col-span-2">
+                  <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Presupuesto</label>
+                  <div className="relative mt-1">
+                    <IoWallet className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
+                    <input
+                      type="number"
+                      min={0}
+                      value={editBudget}
+                      onChange={(e) => setEditBudget(e.target.value)}
+                      placeholder="0"
+                      className="w-full pl-8 pr-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-300"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Moneda</label>
+                  <select
+                    value={editCurrency}
+                    onChange={(e) => setEditCurrency(e.target.value)}
+                    className="w-full mt-1 px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-300 bg-white"
+                  >
+                    <option value="USD">USD</option>
+                    <option value="EUR">EUR</option>
+                    <option value="MXN">MXN</option>
+                    <option value="GBP">GBP</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-2 px-5 pb-5">
+              <button
+                onClick={() => setEditOpen(false)}
+                className="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-500 hover:bg-gray-50 text-sm font-semibold transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={saveEdit}
+                disabled={savingEdit || !editName.trim() || !editStart || !editEnd}
+                className="flex-1 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-600 disabled:opacity-50 text-white text-sm font-semibold transition-colors"
+              >
+                {savingEdit ? "Guardando..." : "Guardar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
